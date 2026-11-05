@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Javascript 1</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 13px; margin: 8px; }
+    h1 { font-size: 24px; margin: 8px 0 14px; }
+    fieldset { margin-top: 14px; padding: 6px 8px; min-height: 22px; }
+    legend { font-size: 13px; }
+    .row { display: flex; align-items: center; height: 19px; margin: 2px 0; }
+    .row .num  { width: 38px; }
+    .row .type { width: 60px; font-weight: bold; }
+    .even { color: green; }
+    .odd  { color: blue; }
+    .row button { margin-right: 3px; }
+    .stat { margin: 10px 0 4px; font-weight: bold; }
+    .stat span { margin-left: 6px; text-decoration: underline; font-weight: normal; }
+    .controls { margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Javascript Web Output #1</h1>
+
+  <div>
+    Insert any Positive Numbers: <input type="text" id="numInput" inputmode="numeric">
+  </div>
+  <div style="margin-top:2px">
+    <button id="insertBtn">Insert</button>
+    <button id="clearEntryBtn">Clear Entry</button>
+  </div>
+
+  <fieldset>
+    <legend>Inserted Numbers</legend>
+    <div id="list"></div>
+    <div id="stats"></div>
+  </fieldset>
+
+  <div class="controls">
+    <button id="clearItemsBtn">Clear Items</button>
+    <button id="totalBtn">Get Total</button>
+    <button id="hlBtn">Identify Highest and Lowest Number</button>
+    Sort by:
+    <select id="sortSelect">
+      <option value="">Please select</option>
+      <option value="asc">Ascending</option>
+      <option value="desc">Descending</option>
+    </select>
+  </div>
+
+  <script>
+    let numbers = [];
+    let showTotal = false;
+    let showHL = false;
+
+    const $ = id => document.getElementById(id);
+
+    function parsePositive(text) {
+      const t = String(text).trim();
+      if (!/^\d+(\.\d+)?$/.test(t)) return null;
+      const n = parseFloat(t);
+      return n > 0 ? n : null;
+    }
+
+    function render() {
+      const list = $("list");
+      list.innerHTML = "";
+      numbers.forEach((n, i) => {
+        const even = n % 2 === 0;
+        const row = document.createElement("div");
+        row.className = "row";
+
+        const num = document.createElement("span");
+        num.className = "num";
+        num.textContent = n;
+
+        const type = document.createElement("span");
+        type.className = "type " + (even ? "even" : "odd");
+        type.textContent = even ? "EVEN" : "ODD";
+
+        const rm = document.createElement("button");
+        rm.textContent = "Remove";
+        rm.onclick = () => { numbers.splice(i, 1); render(); };
+
+        const ed = document.createElement("button");
+        ed.textContent = "Edit";
+        ed.onclick = () => {
+          const v = prompt("Enter new number:", n);
+          if (v === null) return;
+          const parsed = parsePositive(v);
+          if (parsed === null) { alert("Please enter a positive number."); return; }
+          numbers[i] = parsed;
+          render();
+        };
+
+        row.append(num, type, rm, ed);
+        list.appendChild(row);
+      });
+
+      const stats = $("stats");
+      stats.innerHTML = "";
+      if (numbers.length) {
+        if (showHL) {
+          stats.innerHTML +=
+            `<div class="stat">HIGHEST <span>${Math.max(...numbers)}</span></div>` +
+            `<div class="stat">LOWEST <span>${Math.min(...numbers)}</span></div>`;
+        }
+        if (showTotal) {
+          const total = numbers.reduce((a, b) => a + b, 0);
+          stats.innerHTML += `<div class="stat">TOTAL <span>${total}</span></div>`;
+        }
+      }
+    }
+
+    function insert() {
+      const n = parsePositive($("numInput").value);
+      if (n === null) {
+        alert("Please enter a positive number.");
+        $("numInput").focus();
+        return;
+      }
+      numbers.push(n);
+      $("numInput").value = "";
+      $("numInput").focus();
+      $("sortSelect").value = "";
+      render();
+    }
+
+    $("insertBtn").onclick = insert;
+    $("numInput").addEventListener("keydown", e => { if (e.key === "Enter") insert(); });
+
+    $("clearEntryBtn").onclick = () => { $("numInput").value = ""; $("numInput").focus(); };
+
+    $("clearItemsBtn").onclick = () => {
+      numbers = [];
+      showTotal = showHL = false;
+      $("sortSelect").value = "";
+      render();
+    };
+
+    $("totalBtn").onclick = () => { showTotal = true; render(); };
+    $("hlBtn").onclick = () => { showHL = true; render(); };
+
+    $("sortSelect").onchange = e => {
+      if (e.target.value === "asc") numbers.sort((a, b) => a - b);
+      if (e.target.value === "desc") numbers.sort((a, b) => b - a);
+      render();
+    };
+
+    render();
+  </script>
+</body>
+</html>
